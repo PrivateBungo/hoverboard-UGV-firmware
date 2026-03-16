@@ -23,6 +23,7 @@
 #include "defines.h"
 #include "setup.h"
 #include "config.h"
+#include "util.h"
 //#include "hd44780.h"
 
 void SystemClock_Config(void);
@@ -39,15 +40,6 @@ extern UART_HandleTypeDef huart2;
 int cmd1;  // normalized input values. -1000 to 1000
 int cmd2;
 int cmd3;
-
-typedef struct{
-	uint16_t start_of_frame;
-	int16_t  steer;
-	int16_t  speed;
-	uint16_t checksum;
-} Serialcommand;
-
-volatile Serialcommand command;
 
 uint8_t button1, button2;
 
@@ -158,7 +150,7 @@ int main(void) {
 
   #ifdef CONTROL_SERIAL_USART2
     UART_Control_Init();
-    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+    uart_comms_init();
   #endif
 
   #ifdef DEBUG_I2C_LCD
@@ -184,7 +176,7 @@ int main(void) {
   #endif
 
   float board_temp_adc_filtered = (float)adc_buffer.temp;
-  float board_temp_deg_c;
+  float board_temp_deg_c = 0.0f;
 
   enable = 1;  // enable motors
 
@@ -220,18 +212,19 @@ int main(void) {
     #endif
 
 #ifdef CONTROL_SERIAL_USART2
-	  if (command.start_of_frame == START_FRAME && 
-			  command.checksum ==(uint16_t)(START_FRAME ^ command.steer ^ command.speed)) {
-		  cmd1 = CLAMP((int16_t)command.steer, -1000, 1000);
-		  cmd2 = CLAMP((int16_t)command.speed, -1000, 1000);
-	  } else {                                  // restart DMA to hopefully get back in sync
-		  // Try a periodic reset
-		  if (main_loop_counter % 25 == 0) {
-			  HAL_UART_DMAStop(&huart2);
-			  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
-		  }
-	  }
-	  timeout = 0;
+      int16_t serial_steer;
+      int16_t serial_speed;
+
+      uart_control_rx_check();
+      if (uart_control_get_command(&serial_steer, &serial_speed)) {
+        cmd1 = serial_steer;
+        cmd2 = serial_speed;
+      }
+
+      if (uart_control_get_last_valid_ms() != 0 &&
+          (HAL_GetTick() - uart_control_get_last_valid_ms()) <= SERIAL_COMMAND_TIMEOUT_MS) {
+        timeout = 0;
+      }
 #endif
 
     #ifdef CONTROL_MOTOR_TEST
@@ -270,6 +263,14 @@ int main(void) {
       pwml = speedL;
     #endif
     }
+
+    uart_feedback_periodic((int16_t)cmd1,
+                           (int16_t)cmd2,
+                           (int16_t)speedR,
+                           (int16_t)speedL,
+                           (uint16_t)(batteryVoltage * 100.0f),
+                           (int16_t)(board_temp_deg_c * 10.0f),
+                           (uint16_t)HAL_GPIO_ReadPin(LED_PORT, LED_PIN));
 
     lastSpeedL = speedL;
     lastSpeedR = speedR;

@@ -55,8 +55,12 @@
 
 // ###### CONTROL VIA UART (serial) ######
 //#define CONTROL_SERIAL_USART2       // left sensor board cable, disable if ADC or PPM is used!
-#define CONTROL_BAUD       19200    // control via usart from eg an Arduino or raspberry
+#define SERIAL_COMMAND_TIMEOUT_MS 100
+#define CONTROL_BAUD       115200   // align with reference repo + host script defaults
 // for Arduino, use void loop(void){ Serial.write((uint8_t *) &steer, sizeof(steer)); Serial.write((uint8_t *) &speed, sizeof(speed));delay(20); }
+
+//#define FEEDBACK_SERIAL_USART2
+#define SERIAL_FEEDBACK_INTERVAL_MS 10
 
 // ###### CONTROL VIA RC REMOTE ######
 // left sensor board cable. Channel 1: steering, Channel 2: speed. Use a very short cable!
