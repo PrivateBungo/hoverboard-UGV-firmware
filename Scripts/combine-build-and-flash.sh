@@ -9,7 +9,7 @@ cd "$REPO_DIR"
 echo "==> Pulling latest changes"
 sudo -u gijs git pull --ff-only
 
-"${SCRIPT_DIR}/build_only.sh"
-"${SCRIPT_DIR}/flash_only.sh"
+"${SCRIPT_DIR}/build-only.sh"
+"${SCRIPT_DIR}/flash-only.sh"
 
 echo "==> Done"
