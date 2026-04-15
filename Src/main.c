@@ -50,6 +50,15 @@ typedef struct{
 
 volatile Serialcommand command;
 
+typedef struct{
+  uint16_t start_of_frame;
+  int16_t  steer;
+  int16_t  speed;
+  uint16_t checksum;
+} Serialfeedback;
+
+volatile Serialfeedback feedback;
+
 uint8_t button1, button2;
 
 int steer; // global variable for steering. -1000 to 1000
@@ -244,6 +253,16 @@ int main(void) {
 		  }
 	  }
 	  timeout = 0;
+
+    #ifdef CONTROL_SERIAL_USART3
+      feedback.start_of_frame = START_FRAME;
+      feedback.steer = (int16_t)cmd1;
+      feedback.speed = (int16_t)cmd2;
+      feedback.checksum = START_FRAME ^ feedback.steer ^ feedback.speed;
+      if (huart3.gState == HAL_UART_STATE_READY) {
+        HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&feedback, sizeof(feedback));
+      }
+    #endif
 #endif
 
     #ifdef CONTROL_MOTOR_TEST

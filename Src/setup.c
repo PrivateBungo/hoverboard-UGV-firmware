@@ -148,8 +148,6 @@ void UART_Control_Init() {
 
   __HAL_RCC_DMA1_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_AFIO_CLK_ENABLE();
-  __HAL_AFIO_REMAP_USART3_PARTIAL();
 
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Pin = GPIO_PIN_10;
