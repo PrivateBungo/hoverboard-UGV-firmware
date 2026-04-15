@@ -42,6 +42,8 @@ extern I2C_HandleTypeDef hi2c2;
 
 extern DMA_HandleTypeDef hdma_usart2_rx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+extern DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN 0 */
 
@@ -250,6 +252,18 @@ void DMA1_Channel7_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel5_IRQn 1 */
 
   /* USER CODE END DMA1_Channel5_IRQn 1 */
+}
+#endif
+
+#ifdef CONTROL_SERIAL_USART3
+void DMA1_Channel3_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart3_rx);
+}
+
+void DMA1_Channel2_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_usart3_tx);
 }
 #endif
 

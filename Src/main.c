@@ -35,6 +35,7 @@ extern volatile adc_buf_t adc_buffer;
 //LCD_PCF8574_HandleTypeDef lcd;
 extern I2C_HandleTypeDef hi2c2;
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 int cmd1;  // normalized input values. -1000 to 1000
 int cmd2;
@@ -156,9 +157,14 @@ int main(void) {
     Nunchuck_Init();
   #endif
 
-  #ifdef CONTROL_SERIAL_USART2
+  #if defined(CONTROL_SERIAL_USART2) || defined(CONTROL_SERIAL_USART3)
     UART_Control_Init();
-    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+    #ifdef CONTROL_SERIAL_USART2
+      HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+    #endif
+    #ifdef CONTROL_SERIAL_USART3
+      HAL_UART_Receive_DMA(&huart3, (uint8_t *)&command, sizeof(command));
+    #endif
   #endif
 
   #ifdef DEBUG_I2C_LCD
@@ -219,7 +225,7 @@ int main(void) {
       timeout = 0;
     #endif
 
-#ifdef CONTROL_SERIAL_USART2
+#if defined(CONTROL_SERIAL_USART2) || defined(CONTROL_SERIAL_USART3)
 	  if (command.start_of_frame == START_FRAME && 
 			  command.checksum ==(uint16_t)(START_FRAME ^ command.steer ^ command.speed)) {
 		  cmd1 = CLAMP((int16_t)command.steer, -1000, 1000);
@@ -227,8 +233,14 @@ int main(void) {
 	  } else {                                  // restart DMA to hopefully get back in sync
 		  // Try a periodic reset
 		  if (main_loop_counter % 25 == 0) {
-			  HAL_UART_DMAStop(&huart2);
-			  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+        #ifdef CONTROL_SERIAL_USART2
+			    HAL_UART_DMAStop(&huart2);
+			    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+        #endif
+        #ifdef CONTROL_SERIAL_USART3
+			    HAL_UART_DMAStop(&huart3);
+			    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&command, sizeof(command));
+        #endif
 		  }
 	  }
 	  timeout = 0;
