@@ -5,7 +5,8 @@
 #include "stdio.h"
 #include "string.h"
 
-UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 #ifdef DEBUG_SERIAL_USART3
 #define UART_DMA_CHANNEL DMA1_Channel2
@@ -14,7 +15,6 @@ UART_HandleTypeDef huart2;
 #ifdef DEBUG_SERIAL_USART2
 #define UART_DMA_CHANNEL DMA1_Channel7
 #endif
-
 
 volatile uint8_t uart_buf[100];
 volatile int16_t ch_buf[8];
@@ -60,5 +60,9 @@ void consoleScope() {
 
 void consoleLog(char *message)
 {
+  #ifdef CONTROL_SERIAL_USART3
+    HAL_UART_Transmit_DMA(&huart3, (uint8_t *)message, strlen(message));
+  #else
     HAL_UART_Transmit_DMA(&huart2, (uint8_t *)message, strlen(message));
+  #endif
 }

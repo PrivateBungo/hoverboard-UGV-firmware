@@ -35,6 +35,7 @@ extern volatile adc_buf_t adc_buffer;
 //LCD_PCF8574_HandleTypeDef lcd;
 extern I2C_HandleTypeDef hi2c2;
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart3;
 
 int cmd1;  // normalized input values. -1000 to 1000
 int cmd2;
@@ -48,6 +49,15 @@ typedef struct{
 } Serialcommand;
 
 volatile Serialcommand command;
+
+typedef struct{
+  uint16_t start_of_frame;
+  int16_t  steer;
+  int16_t  speed;
+  uint16_t checksum;
+} Serialfeedback;
+
+volatile Serialfeedback feedback;
 
 uint8_t button1, button2;
 
@@ -156,9 +166,14 @@ int main(void) {
     Nunchuck_Init();
   #endif
 
-  #ifdef CONTROL_SERIAL_USART2
+  #if defined(CONTROL_SERIAL_USART2) || defined(CONTROL_SERIAL_USART3)
     UART_Control_Init();
-    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+    #ifdef CONTROL_SERIAL_USART2
+      HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+    #endif
+    #ifdef CONTROL_SERIAL_USART3
+      HAL_UART_Receive_DMA(&huart3, (uint8_t *)&command, sizeof(command));
+    #endif
   #endif
 
   #ifdef DEBUG_I2C_LCD
@@ -219,7 +234,7 @@ int main(void) {
       timeout = 0;
     #endif
 
-#ifdef CONTROL_SERIAL_USART2
+#if defined(CONTROL_SERIAL_USART2) || defined(CONTROL_SERIAL_USART3)
 	  if (command.start_of_frame == START_FRAME && 
 			  command.checksum ==(uint16_t)(START_FRAME ^ command.steer ^ command.speed)) {
 		  cmd1 = CLAMP((int16_t)command.steer, -1000, 1000);
@@ -227,11 +242,27 @@ int main(void) {
 	  } else {                                  // restart DMA to hopefully get back in sync
 		  // Try a periodic reset
 		  if (main_loop_counter % 25 == 0) {
-			  HAL_UART_DMAStop(&huart2);
-			  HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+        #ifdef CONTROL_SERIAL_USART2
+			    HAL_UART_DMAStop(&huart2);
+			    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&command, sizeof(command));
+        #endif
+        #ifdef CONTROL_SERIAL_USART3
+			    HAL_UART_DMAStop(&huart3);
+			    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&command, sizeof(command));
+        #endif
 		  }
 	  }
 	  timeout = 0;
+
+    #ifdef CONTROL_SERIAL_USART3
+      feedback.start_of_frame = START_FRAME;
+      feedback.steer = (int16_t)cmd1;
+      feedback.speed = (int16_t)cmd2;
+      feedback.checksum = START_FRAME ^ feedback.steer ^ feedback.speed;
+      if (huart3.gState == HAL_UART_STATE_READY) {
+        HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&feedback, sizeof(feedback));
+      }
+    #endif
 #endif
 
     #ifdef CONTROL_MOTOR_TEST

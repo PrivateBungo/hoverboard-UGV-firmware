@@ -46,15 +46,16 @@
 
 // ############################### SERIAL DEBUG ###############################
 
-#define DEBUG_SERIAL_USART3         // right sensor board cable, disable if I2C (nunchuck or lcd) is used!
+//#define DEBUG_SERIAL_USART3         // right sensor board cable, disable if I2C (nunchuck or lcd) is used!
 #define DEBUG_BAUD       115200     // UART baud rate
 //#define DEBUG_SERIAL_SERVOTERM      // Software for plotting graphs: https://github.com/STMBL/Servoterm-app
-#define DEBUG_SERIAL_ASCII          // "1:345 2:1337 3:0 4:0 5:0 6:0 7:0 8:0\r\n"
+//#define DEBUG_SERIAL_ASCII          // "1:345 2:1337 3:0 4:0 5:0 6:0 7:0 8:0\r\n"
 
 // ############################### INPUT ###############################
 
 // ###### CONTROL VIA UART (serial) ######
 //#define CONTROL_SERIAL_USART2       // left sensor board cable, disable if ADC or PPM is used!
+#define CONTROL_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuck or lcd) is used!
 #define CONTROL_BAUD       19200    // control via usart from eg an Arduino or raspberry
 // for Arduino, use void loop(void){ Serial.write((uint8_t *) &steer, sizeof(steer)); Serial.write((uint8_t *) &speed, sizeof(speed));delay(20); }
 
@@ -77,7 +78,7 @@
 
 // ###### MOTOR TEST MODE ######
 // slowly move both wheels forward and backward, ignoring all inputs
-#define CONTROL_MOTOR_TEST
+//#define CONTROL_MOTOR_TEST
 #define CONTROL_MOTOR_TEST_MAX_SPEED 300         // sweep slowly from -MAX_SPEED to MAX_SPEED (0 - 1000)
 
 // ############################### DRIVING BEHAVIOR ###############################
@@ -139,16 +140,16 @@ else {\
 
 // ############################### VALIDATE SETTINGS ###############################
 
-#if defined CONTROL_SERIAL_USART2 && defined CONTROL_ADC
+#if (defined CONTROL_SERIAL_USART2 || defined CONTROL_SERIAL_USART3) && defined CONTROL_ADC
   #error CONTROL_ADC and CONTROL_SERIAL_USART2 not allowed. it is on the same cable.
 #endif
 
-#if defined CONTROL_SERIAL_USART2 && defined CONTROL_PPM
+#if (defined CONTROL_SERIAL_USART2 || defined CONTROL_SERIAL_USART3) && defined CONTROL_PPM
   #error CONTROL_PPM and CONTROL_SERIAL_USART2 not allowed. it is on the same cable.
 #endif
 
-#if defined DEBUG_SERIAL_USART3 && defined CONTROL_NUNCHUCK
-  #error CONTROL_NUNCHUCK and DEBUG_SERIAL_USART3 not allowed. it is on the same cable.
+#if (defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3)) && defined(CONTROL_NUNCHUCK)
+  #error CONTROL_NUNCHUCK and DEBUG_SERIAL_USART3/CONTROL_SERIAL_USART3 not allowed. it is on the same cable.
 #endif
 
 #if defined DEBUG_SERIAL_USART3 && defined DEBUG_I2C_LCD
@@ -156,6 +157,13 @@ else {\
 #endif
 
 #ifdef CONTROL_SERIAL_USART2
+  #if defined CONTROL_DEFINED
+    #error select exactly 1 input method in config.h!
+  #endif
+  #define CONTROL_DEFINED
+#endif
+
+#ifdef CONTROL_SERIAL_USART3
   #if defined CONTROL_DEFINED
     #error select exactly 1 input method in config.h!
   #endif
