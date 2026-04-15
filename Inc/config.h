@@ -57,6 +57,7 @@
 //#define CONTROL_SERIAL_USART2       // left sensor board cable, disable if ADC or PPM is used!
 #define CONTROL_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuck or lcd) is used!
 #define CONTROL_BAUD       19200    // control via usart from eg an Arduino or raspberry
+//#define CONTROL_SERIAL_FEEDBACK      // send binary feedback packets on control UART (enable only if your host expects it)
 // for Arduino, use void loop(void){ Serial.write((uint8_t *) &steer, sizeof(steer)); Serial.write((uint8_t *) &speed, sizeof(speed));delay(20); }
 
 // ###### CONTROL VIA RC REMOTE ######
@@ -154,6 +155,10 @@
 
 #if defined DEBUG_SERIAL_USART3 && defined DEBUG_I2C_LCD
   #error DEBUG_I2C_LCD and DEBUG_SERIAL_USART3 not allowed. it is on the same cable.
+#endif
+
+#if defined DEBUG_SERIAL_USART3 && defined CONTROL_SERIAL_USART3
+  #error DEBUG_SERIAL_USART3 and CONTROL_SERIAL_USART3 not allowed together.
 #endif
 
 #ifdef CONTROL_SERIAL_USART2
