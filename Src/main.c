@@ -254,7 +254,7 @@ int main(void) {
 	  }
 	  timeout = 0;
 
-    #ifdef CONTROL_SERIAL_USART3
+    #if defined(CONTROL_SERIAL_USART3) && defined(CONTROL_SERIAL_FEEDBACK)
       feedback.start_of_frame = START_FRAME;
       feedback.steer = (int16_t)cmd1;
       feedback.speed = (int16_t)cmd2;

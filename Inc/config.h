@@ -57,6 +57,7 @@
 //#define CONTROL_SERIAL_USART2       // left sensor board cable, disable if ADC or PPM is used!
 #define CONTROL_SERIAL_USART3        // right sensor board cable, disable if I2C (nunchuck or lcd) is used!
 #define CONTROL_BAUD       19200    // control via usart from eg an Arduino or raspberry
+//#define CONTROL_SERIAL_FEEDBACK      // send binary feedback packets on control UART (enable only if your host expects it)
 // for Arduino, use void loop(void){ Serial.write((uint8_t *) &steer, sizeof(steer)); Serial.write((uint8_t *) &speed, sizeof(speed));delay(20); }
 
 // ###### CONTROL VIA RC REMOTE ######
@@ -99,13 +100,13 @@
 #define BEEPS_BACKWARD 1    // 0 or 1
 
 //Turbo boost at high speeds while button1 is pressed:
-//#define ADDITIONAL_CODE \
-if (button1 && speedR > 700) { /* field weakening at high speeds */ \
-  weakl = cmd1 - 700; /* weak should never exceed 400 or 450 MAX!! */ \
-  weakr = cmd1 - 700; } \
-else { \
-  weakl = 0; \
-  weakr = 0; }
+// #define ADDITIONAL_CODE \
+// if (button1 && speedR > 700) { /* field weakening at high speeds */ \
+//   weakl = cmd1 - 700; /* weak should never exceed 400 or 450 MAX!! */ \
+//   weakr = cmd1 - 700; } \
+// else { \
+//   weakl = 0; \
+//   weakr = 0; }
 
 // ###### SIMPLE BOBBYCAR ######
 // for better bobbycar code see: https://github.com/larsmm/hoverboard-firmware-hack-bbcar
@@ -114,17 +115,17 @@ else { \
 // #define STEER_COEFFICIENT   0
 
 // #define ADDITIONAL_CODE \
-if (button1 && speedR < 300) { /* drive backwards */ \
-  speedR = speedR * -0.2f;   \
-  speedL = speedL * -0.2f; } \
-else { \
-  direction = 1; } \
-if (button1 && speedR > 700) { /* field weakening at high speeds */ \
-  weakl = speedR - 600; /* weak should never exceed 400 or 450 MAX!! */ \
-  weakr = speedR - 600; } \
-else { \
-  weakl = 0; \
-  weakr = 0; }
+// if (button1 && speedR < 300) { /* drive backwards */ \
+//   speedR = speedR * -0.2f;   \
+//   speedL = speedL * -0.2f; } \
+// else { \
+//   direction = 1; } \
+// if (button1 && speedR > 700) { /* field weakening at high speeds */ \
+//   weakl = speedR - 600; /* weak should never exceed 400 or 450 MAX!! */ \
+//   weakr = speedR - 600; } \
+// else { \
+//   weakl = 0; \
+//   weakr = 0; }
 
 // ###### ARMCHAIR ######
 // #define FILTER              0.05
@@ -132,11 +133,11 @@ else { \
 // #define STEER_COEFFICIENT   -0.2
 
 // #define ADDITIONAL_CODE if (button1 && scale > 0.8) { /* field weakening at high speeds */ \
-  weakl = speedL - 600; /* weak should never exceed 400 or 450 MAX!! */ \
-  weakr = speedR - 600; } \
-else {\
-  weakl = 0;\
-  weakr = 0;
+//   weakl = speedL - 600; /* weak should never exceed 400 or 450 MAX!! */ \
+//   weakr = speedR - 600; } \
+// else {\
+//   weakl = 0;\
+//   weakr = 0; }
 
 // ############################### VALIDATE SETTINGS ###############################
 
@@ -154,6 +155,10 @@ else {\
 
 #if defined DEBUG_SERIAL_USART3 && defined DEBUG_I2C_LCD
   #error DEBUG_I2C_LCD and DEBUG_SERIAL_USART3 not allowed. it is on the same cable.
+#endif
+
+#if defined DEBUG_SERIAL_USART3 && defined CONTROL_SERIAL_USART3
+  #error DEBUG_SERIAL_USART3 and CONTROL_SERIAL_USART3 not allowed together.
 #endif
 
 #ifdef CONTROL_SERIAL_USART2
